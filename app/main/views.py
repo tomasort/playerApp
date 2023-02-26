@@ -1,4 +1,5 @@
 from flask import render_template, session, url_for, request, session
+from flask_login import logout_user, login_required
 from ..models import User
 from . import main
 from .. import db
@@ -63,6 +64,7 @@ def index():
     return "Hello user, this is the player app"
 
 @main.route('/player')
+@login_required
 def hello():
 #     return 'Hello, World! (from flask). I\'m working on the video player (literaly) right now!'
     return render_template('player.html')

@@ -8,6 +8,7 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_SUBJECT_PREFIX = '[PlayerApp]'
+    MAIL_SENDER = 'PlayerApp Admin <tomasvortegar@gmail.com>'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SSL_REDIRECT = False
 
