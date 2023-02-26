@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+      
+        <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
+        <!-- <script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script> -->
+        <link rel="stylesheet" href='/static/player.css' />
+        <script>
+          function remote(button) {
+            console.log("The button", button, "has been pressed!");
+            // Create a new XMLHttpRequest object
+            var xhr = new XMLHttpRequest();
+      
+            //// Define the POST request to the /my-button route
+            xhr.open('POST', '/button', true);
+      
+            //// Set the content type of the request
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+      
+            //// Send the POST request with any necessary data
+            xhr.send(`button=${button}`);
+          }
+          function stream(action) {
+            // Create a new XMLHttpRequest object
+            var xhr = new XMLHttpRequest();
+      
+            //// Define the POST request to the /my-button route
+            xhr.open('POST', '/stream-control', true);
+      
+            //// Set the content type of the request
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+      
+            //// Send the POST request with any necessary data
+            xhr.send(`action=${action}`);
+          }
+        </script>
+      </head>
+      
+      <body>
+        <video-js
+          id="my-video"
+          class="video-js"
+          controls
+          preload="none"
+          width="640"
+          height="264"
+        >
+          <source src="http://192.168.1.38:8080/hls/stream.m3u8" type="application/x-mpegURL" />
+          <p class="vjs-no-js">
+            To view this video please enable JavaScript, and consider upgrading to a
+            web browser that
+            <a href="https://videojs.com/html5-video-support/" target="_blank"
+              >supports HTML5 video</a
+            >
+          </p>
+        </video-js>
+        <button onclick="remote('KEY_CHANNELUP')">Up</button>
+        <button onclick="remote('KEY_CHANNELDOWN')">Down</button>
+        <button onclick="stream('start')">Start stream</button>
+        <button onclick="stream('stop')">Stop stream</button>
+      
+      
+        <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+        <script>
+          var player = videojs('my-video');
+          player.on('error', function() {
+            // Display a custom message to the user
+            var message = document.createElement('div');
+            message.className = 'loading-screen';
+            message.innerHTML = 'The video stream will start shortly. Please wait...';
+            player.el().appendChild(message);
+      
+            // Hide the player controls
+            player.controls(false);
+          });
+      
+          player.on('loadedmetadata', function() {
+            // Remove the custom message and show the player controls
+            var message = player.el().getElementsByClassName('loading-screen')[0];
+            if (message) {
+              player.el().removeChild(message);
+            }
+            player.controls(true);
+          });
+      
+          function reloadMedia() {
+            player.src({
+              src: 'http://192.168.1.38:8080/hls/stream.m3u8',
+              type: 'application/x-mpegURL'
+            });
+            player.load();
+            player.play();
+          }
+      
+          // Check if the stream is available every 5 seconds
+          var checkStreamInterval = setInterval(function() {
+            fetch('http://192.168.1.38:8080/hls/stream.m3u8')
+              .then(function(response) {
+                if (response.status === 200) {
+                  clearInterval(checkStreamInterval);
+                  reloadMedia();
+                }
+              });
+          }, 5000);
+        </script>
+      </body>
+</html>
