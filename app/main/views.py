@@ -64,7 +64,6 @@ def index():
     return "Hello user, this is the player app"
 
 @main.route('/player')
-@login_required
 def hello():
 #     return 'Hello, World! (from flask). I\'m working on the video player (literaly) right now!'
     return render_template('player.html')

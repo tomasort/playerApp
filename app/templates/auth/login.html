@@ -6,13 +6,13 @@
     </style>
 {% endblock %}
 {% block body %}
-    <div class="login-box">
+    <div class="auth-box">
         <h2>Login</h2>
         <form method="POST">
             <form method="POST">
                 {{ form.hidden_tag() }}
                 <div class="user-box">
-                    {{ form.email(required=True) }}
+                    {{ form.email() }}
                     {{ form.email.label }} 
                 </div>
                 <div class="user-box">
