@@ -1,9 +1,11 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_moment import Moment
 from config import config
 
 db = SQLAlchemy()
+moment = Moment()
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -15,6 +17,7 @@ def create_app(config_name):
 
     db.init_app(app)
     login_manager.init_app(app)
+    moment.init_app(app)
 
     if app.config['SSL_REDIRECT']:
         from flask_sslify import SSLify

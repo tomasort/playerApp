@@ -4,6 +4,7 @@
     {{ super() }}
     <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
     <script src="/static/buttons.js"></script>
+    {{ moment.include_moment() }}
 {% endblock %}
 {% block body %}
   <video-js
@@ -25,6 +26,9 @@
     <button onclick="stream('start')">Start stream</button>
     <button onclick="stream('stop')">Stop stream</button>
   </div>
+
+  <p>The local date and time is {{ moment(current_time).format('LLL') }}.</p>
+  <p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
 
   <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
   <script src="/static/video.js"></script>

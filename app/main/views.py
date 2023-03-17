@@ -1,8 +1,10 @@
-from flask import render_template, session, url_for, request, session
+from flask import render_template, session, url_for, request, session, flash
 from flask_login import logout_user, login_required
+from datetime import datetime
 from ..models import User
 from . import main
 from .. import db
+from .. import moment
 import subprocess
 import psutil
 import signal
@@ -32,34 +34,32 @@ def restart_modules():
     password = os.getenv('ODROID_PASSWORD')
     os.system('{} {} | {} -S {}'.format(echo_command, password, sudo_command, command))
 
-def start_stream():
+def start_stream(framerate=25, audio_delay=0.3, resolution='720x480', audio_bitrate='192k', video_bitrate=None, preset="ultrafast"):
     global ffmpeg_process
-    restart_modules()
+    # restart_modules()
     # start the stream using ffmpeg
-    print("Starting the stream!")
+    flash("Starting the stream!")
     # audio_device = "hw:CARD=Capture,DEV=0"
     audio_device = "hw:CARD=MS2109,DEV=0"
-    framerate = 30
-    audio_delay = 0.3  # https://trac.ffmpeg.org/wiki/UnderstandingItsoffset
     itsoffset = [] 
     if audio_delay != 0:
         itsoffset = ['-itsoffset', str(audio_delay)]
     command = [
-        '/usr/bin/ffmpeg', '-f', 'v4l2', '-thread_queue_size', '1024', '-framerate', str(framerate), '-s', '720x480', '-c:v', 'mjpeg', '-i', '/dev/video0',
+        '/usr/bin/ffmpeg', '-f', 'v4l2', '-thread_queue_size', '1024', '-framerate', str(framerate), '-s', resolution, '-c:v', 'mjpeg', '-i', '/dev/video0',
         '-f', 'alsa', '-ac', '2', '-thread_queue_size', '1024', *itsoffset, '-i', audio_device,
-        '-b:a', '192k', '-c:a', 'aac', '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', 
+        '-b:a', audio_bitrate, '-c:a', 'aac', '-c:v', 'libx264', '-preset', preset, '-tune', 'zerolatency', 
         '-f', 'flv', 'rtmp://localhost/live/stream'
     ]
     ffmpeg_process = subprocess.Popen(command, close_fds=True)
 
 def stop_stream():
     global ffmpeg_process
-    print("Stopping the stream!")
+    flash("Stopping the stream!")
     pids = find_pid_by_name("ffmpeg")
     if pids:
         for pid in pids:
             os.kill(pid, signal.SIGTERM)
-    restart_modules()
+    # restart_modules()
 
 @main.route('/')
 def index():
@@ -67,7 +67,7 @@ def index():
 
 @main.route('/player')
 def player():
-    return render_template('player.html')
+    return render_template('player.html', current_time=datetime.utcnow())
 
 @main.route('/button', methods=['POST'])
 def button_pressed():
@@ -77,7 +77,7 @@ def button_pressed():
         command = ['/usr/bin/irsend', 'SEND_ONCE', 'my_remote', button, '-d', '/var/run/lirc/lirc1']
         button_press = subprocess.Popen(command)
     else:
-        print("The button is not valid")
+        flash("The button is not valid")
     return ""
 
 @main.route('/stream-control', methods=['POST'])
@@ -92,5 +92,5 @@ def stream_control():
         stop_stream()
         start_stream()
     else:
-        print("The action is not valid!")
+        flash("The action is not valid!")
     return ""
