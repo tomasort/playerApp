@@ -1,33 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+
+    <head>
         {% block head %}
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}{% endblock %} - PlayerApp</title>
+        <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="/static/status.js"></script>
         <link rel="stylesheet" href='/static/style.css' />
+        <title>{% block title %}{% endblock %} - PlayerApp</title>
         {% endblock %}
-</head>
+    </head>
+
     <body>
-        <!-- this is the navbar of the application -->
-        <nav>
-            <ul>
-                <li>
-                    <h1>
-                        <a href="{{ url_for('main.index') }}">PlayerApp</a>
-                    </h1>
-                </li>
-                <li>Status: <span id="status">Active</span></li>
-                <li><a href="{{ url_for('main.player') }}">Video Player</a></li>
-                {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
-                {% else %}
-                <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% block body %}
-        {% endblock %}
+        <!-- navbar of the application -->
+        <header class="header">
+            <a class="header__link" href="{{ url_for('main.index') }}">PlayerApp</a>
+            <div>
+                <nav class="nav">
+                    <ul class="nav__list">
+                        <li class="nav__list-item">Status: <span id="status"></span></li>
+                        <li class="nav__list-item"><a href="{{ url_for('main.player') }}">Video Player</a></li>
+                        {% if current_user.is_authenticated %}
+                        <li class="nav__list-item"><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
+                        {% else %}
+                        <li class="nav__list-item"><a href="{{ url_for('auth.login') }}">Log In</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Doing it with a button to close the alert message -->
+        <!-- <div class="container">
+        {% for message in get_flashed_messages() %}
+            TODO: add nice css to change how the warnings are presented
+            <div class="alert alert-warning">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div> -->
+
+        <!-- Creating a list with the alert messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <ul class=flashes>
+            {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+        <main class="main">
+            {% block body %}
+            {% endblock %}
+        </main>
     </body>
+
 </html>

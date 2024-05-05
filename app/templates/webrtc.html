@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+#video {
+    width: 100%;
+    height: 100%;
+    background: black;
+}
+</style>
+</head>
+<body>
+
+<script>
+
+const restartPause = 2000;
+
+const unquoteCredential = (v) => (
+    JSON.parse(`"${v}"`)
+);
+
+const linkToIceServers = (links) => (
+    (links !== null) ? links.split(', ').map((link) => {
+        const m = link.match(/^<(.+?)>; rel="ice-server"(; username="(.*?)"; credential="(.*?)"; credential-type="password")?/i);
+        const ret = {
+            urls: [m[1]],
+        };
+
+        if (m[3] !== undefined) {
+            ret.username = unquoteCredential(m[3]);
+            ret.credential = unquoteCredential(m[4]);
+            ret.credentialType = "password";
+        }
+
+        return ret;
+    }) : []
+);
+
+const parseOffer = (offer) => {
+    const ret = {
+        iceUfrag: '',
+        icePwd: '',
+        medias: [],
+    };
+
+    for (const line of offer.split('\r\n')) {
+        if (line.startsWith('m=')) {
+            ret.medias.push(line.slice('m='.length));
+        } else if (ret.iceUfrag === '' && line.startsWith('a=ice-ufrag:')) {
+            ret.iceUfrag = line.slice('a=ice-ufrag:'.length);
+        } else if (ret.icePwd === '' && line.startsWith('a=ice-pwd:')) {
+            ret.icePwd = line.slice('a=ice-pwd:'.length);
+        }
+    }
+
+    return ret;
+};
+
+const setAudioBitrate = (section, bitrate) => {
+    let opusPayloadFormat = '';
+    let lines = section.split('\r\n');
+
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('a=rtpmap:') && lines[i].toLowerCase().includes('opus/')) {
+            opusPayloadFormat = lines[i].slice('a=rtpmap:'.length).split(' ')[0];
+            break;
+        }
+    }
+
+    if (opusPayloadFormat === '') {
+        return section;
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('a=fmtp:' + opusPayloadFormat + ' ') && !lines[i].includes(`maxaveragebitrate=${bitrate}`)) {
+            if (lines[i].includes('maxaveragebitrate=')) {
+                lines[i] = lines[i].replace(/maxaveragebitrate=\d+/i, `maxaveragebitrate=${bitrate}`);
+            } else {
+                lines[i] += `;maxaveragebitrate=${bitrate}`;
+            }
+        }
+    }
+
+    return lines.join('\r\n');
+};
+
+
+const enableStereoOpus = (section) => {
+    let opusPayloadFormat = '';
+    let lines = section.split('\r\n');
+
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('a=rtpmap:') && lines[i].toLowerCase().includes('opus/')) {
+            opusPayloadFormat = lines[i].slice('a=rtpmap:'.length).split(' ')[0];
+            break;
+        }
+    }
+
+    if (opusPayloadFormat === '') {
+        return section;
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('a=fmtp:' + opusPayloadFormat + ' ')) {
+            if (!lines[i].includes('stereo')) {
+                lines[i] += ';stereo=1';
+            }
+            if (!lines[i].includes('sprop-stereo')) {
+                lines[i] += ';sprop-stereo=1';
+            }
+        }
+    }
+
+    return lines.join('\r\n');
+};
+
+const editOffer = (offer) => {
+    const sections = offer.sdp.split('m=');
+
+    for (let i = 0; i < sections.length; i++) {
+        const section = sections[i];
+        if (section.startsWith('audio')) {
+            sections[i] = setAudioBitrate(section, 120000);
+;
+        }
+    }
+
+    offer.sdp = sections.join('m=');
+};
+
+const generateSdpFragment = (offerData, candidates) => {
+    const candidatesByMedia = {};
+    for (const candidate of candidates) {
+        const mid = candidate.sdpMLineIndex;
+        if (candidatesByMedia[mid] === undefined) {
+            candidatesByMedia[mid] = [];
+        }
+        candidatesByMedia[mid].push(candidate);
+    }
+
+    let frag = 'a=ice-ufrag:' + offerData.iceUfrag + '\r\n'
+        + 'a=ice-pwd:' + offerData.icePwd + '\r\n';
+
+    let mid = 0;
+
+    for (const media of offerData.medias) {
+        if (candidatesByMedia[mid] !== undefined) {
+            frag += 'm=' + media + '\r\n'
+                + 'a=mid:' + mid + '\r\n';
+
+            for (const candidate of candidatesByMedia[mid]) {
+                frag += 'a=' + candidate.candidate + '\r\n';
+            }
+        }
+        mid++;
+    }
+
+    return frag;
+}
+
+class WHEPClient {
+    constructor(video) {
+        this.video = video;
+        this.pc = null;
+        this.restartTimeout = null;
+        this.serverURL = window.location.protocol + '//' + window.location.hostname + ':8889' + '/mystream/';
+        this.sessionUrl = '';
+        this.queuedCandidates = [];
+        this.start();
+    }
+
+    start() {
+        console.log("requesting ICE servers");
+
+        fetch(new URL('whep', this.serverURL) + window.location.search, {
+            method: 'OPTIONS',
+        })
+            .then((res) => this.onIceServers(res))
+            .catch((err) => {
+                console.log('error: ' + err);
+                this.scheduleRestart();
+            });
+    }
+
+    onIceServers(res) {
+        this.pc = new RTCPeerConnection({
+            iceServers: linkToIceServers(res.headers.get('Link')),
+        });
+
+        const direction = "sendrecv";
+        this.pc.addTransceiver("video", { direction });
+        this.pc.addTransceiver("audio", { direction });
+
+        this.pc.onicecandidate = (evt) => this.onLocalCandidate(evt);
+        this.pc.oniceconnectionstatechange = () => this.onConnectionState();
+
+        this.pc.ontrack = (evt) => {
+            console.log("new track:", evt.track.kind);
+            this.video.srcObject = evt.streams[0];
+        };
+
+        this.pc.createOffer()
+            .then((offer) => this.onLocalOffer(offer));
+    }
+
+    onLocalOffer(offer) {
+        editOffer(offer);
+
+        this.offerData = parseOffer(offer.sdp);
+        this.pc.setLocalDescription(offer);
+
+        console.log("sending offer");
+
+        fetch(new URL('whep', this.serverURL) + window.location.search, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/sdp',
+            },
+            body: offer.sdp,
+        })
+            .then((res) => {
+                if (res.status !== 201) {
+                    throw new Error('bad status code');
+                }
+                this.sessionUrl = new URL(res.headers.get('location'), this.serverURL).toString();
+                return res.text();
+            })
+            .then((sdp) => this.onRemoteAnswer(new RTCSessionDescription({
+                type: 'answer',
+                sdp,
+            })))
+            .catch((err) => {
+                console.log('error: ' + err);
+                this.scheduleRestart();
+            });
+    }
+
+    onConnectionState() {
+        if (this.restartTimeout !== null) {
+            return;
+        }
+
+        console.log("peer connection state:", this.pc.iceConnectionState);
+
+        switch (this.pc.iceConnectionState) {
+        case "disconnected":
+            this.scheduleRestart();
+        }
+    }
+
+    onRemoteAnswer(answer) {
+        if (this.restartTimeout !== null) {
+            return;
+        }
+
+        this.pc.setRemoteDescription(answer);
+
+        if (this.queuedCandidates.length !== 0) {
+            this.sendLocalCandidates(this.queuedCandidates);
+            this.queuedCandidates = [];
+        }
+    }
+
+    onLocalCandidate(evt) {
+        if (this.restartTimeout !== null) {
+            return;
+        }
+
+        if (evt.candidate !== null) {
+            if (this.sessionUrl === '') {
+                this.queuedCandidates.push(evt.candidate);
+            } else {
+                this.sendLocalCandidates([evt.candidate])
+            }
+        }
+    }
+
+    sendLocalCandidates(candidates) {
+        fetch(this.sessionUrl + window.location.search, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/trickle-ice-sdpfrag',
+                'If-Match': '*',
+            },
+            body: generateSdpFragment(this.offerData, candidates),
+        })
+            .then((res) => {
+                if (res.status !== 204) {
+                    throw new Error('bad status code');
+                }
+            })
+            .catch((err) => {
+                console.log('error: ' + err);
+                this.scheduleRestart();
+            });
+    }
+
+    scheduleRestart() {
+        if (this.restartTimeout !== null) {
+            return;
+        }
+
+        if (this.pc !== null) {
+            this.pc.close();
+            this.pc = null;
+        }
+
+        this.restartTimeout = window.setTimeout(() => {
+            this.restartTimeout = null;
+            this.start();
+        }, restartPause);
+
+        if (this.sessionUrl) {
+            fetch(this.sessionUrl, {
+                method: 'DELETE',
+            })
+                .then((res) => {
+                    if (res.status !== 200) {
+                        throw new Error('bad status code');
+                    }
+                })
+                .catch((err) => {
+                    console.log('delete session error: ' + err);
+                });
+        }
+        this.sessionUrl = '';
+
+        this.queuedCandidates = [];
+    }
+}
+
+/**
+ * Parses the query string from a URL into an object representing the query parameters.
+ * If no URL is provided, it uses the query string from the current page's URL.
+ *
+ * @param {string} [url=window.location.search] - The URL to parse the query string from.
+ * @returns {Object} An object representing the query parameters with keys as parameter names and values as parameter values.
+ */
+ const parseQueryString = (url) => {
+    const queryString = (url || window.location.search).split("?")[1];
+    if (!queryString) return {};
+
+    const paramsArray = queryString.split("&");
+    const result = {};
+
+    for (let i = 0; i < paramsArray.length; i++) {
+        const param = paramsArray[i].split("=");
+        const key = decodeURIComponent(param[0]);
+        const value = decodeURIComponent(param[1] || "");
+
+        if (key) {
+            if (result[key]) {
+                if (Array.isArray(result[key])) {
+                    result[key].push(value);
+                } else {
+                    result[key] = [result[key], value];
+                }
+            } else {
+                result[key] = value;
+            }
+        }
+    }
+
+    return result;
+};
+
+/**
+ * Parses a string with boolean-like values and returns a boolean.
+ * @param {string} str The string to parse
+ * @param {boolean} defaultVal The default value
+ * @returns {boolean}
+ */
+const parseBoolString = (str, defaultVal) => {
+    const trueValues = ["1", "yes", "true"];
+    const falseValues = ["0", "no", "false"];
+    str = (str || "").toString();
+
+    if (trueValues.includes(str.toLowerCase())) {
+        return true;
+    } else if (falseValues.includes(str.toLowerCase())) {
+        return false;
+    } else {
+        return defaultVal;
+    }
+};
+
+/**
+ * Sets video attributes based on query string parameters or default values.
+ *
+ * @param {HTMLVideoElement} video - The video element on which to set the attributes.
+ */
+const setVideoAttributes = (video) => {
+    let qs = parseQueryString();
+
+    video.controls = parseBoolString(qs["controls"], true);
+    video.muted = parseBoolString(qs["muted"], true);
+    video.autoplay = parseBoolString(qs["autoplay"], true);
+    video.playsInline = parseBoolString(qs["playsinline"], true);
+};
+
+/**
+ *
+ * @param {(video: HTMLVideoElement) => void} callback
+ * @param {HTMLElement} container
+ * @returns
+ */
+const initVideoElement = (callback, container) => {
+    return () => {
+        const video = document.createElement("video");
+        video.id = "video";
+
+        setVideoAttributes(video);
+        container.append(video);
+        callback(video);
+    };
+};
+
+window.addEventListener('DOMContentLoaded', initVideoElement((video) => new WHEPClient(video), document.body));
+
+</script>
+
+</body>
+</html>

@@ -1,14 +1,17 @@
 import os
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'This is an extreamly hard to guess string that no one will ever guess ever')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'This string is an extreamly hard to guess')
+    VIDEO_SOURCE = os.environ.get('VIDEO_SOURCE', "/dev/video0")
+    AUDIO_SOURCE = os.environ.get('AUDIO_SOURCE', "hw:CARD=MS2109,DEV=0")
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', "example@gmail.com")
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp-relay.sendinblue.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', '587'))
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_SUBJECT_PREFIX = '[PlayerApp]'
-    MAIL_SENDER = 'PlayerApp Admin <tomasvortegar@gmail.com>'
+    MAIL_SENDER = 'PlayerApp Admin <example@gmail.com>'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SSL_REDIRECT = False
 
@@ -16,6 +19,8 @@ class Config:
     def init_app(app):
         pass
 
+
+# TODO: create a database for dev and for test in postgres
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')

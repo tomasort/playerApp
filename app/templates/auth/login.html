@@ -1,33 +1,26 @@
 {% extends "base.html" %}
-{% block title %}Index{% endblock %}
-{% block head %}
-    {{ super() }}
-    <style>
-    </style>
-{% endblock %}
+{% block title %}Login{% endblock %}
 {% block body %}
-    <div class="auth-box">
-        <h2>Login Here</h2>
-        <form method="POST">
-            <form method="POST">
-                {{ form.hidden_tag() }}
-                <div class="user-box">
-                    {{ form.email() }}
-                    {{ form.email.label }} 
-                </div>
-                <div class="user-box">
-                    {{ form.password() }}
-                    {{ form.password.label }} 
-                </div>
-                {{ form.remember_me() }} {{ form.remember_me.label }}
-                {{ form.submit() }}
-            </form>
-            <p>
-                New user?
-                <a href="{{ url_for('auth.register') }}">
-                    Click here to register
-                </a>
-            </p>
-        </form>
-    </div>
+<div class="auth-box">
+    <h2>Login Here</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="user-box">
+            {{ form.email() }}
+            {{ form.email.label }}
+        </div>
+        <div class="user-box">
+            {{ form.password() }}
+            {{ form.password.label }}
+        </div>
+        {{ form.remember_me() }} {{ form.remember_me.label }}
+        {{ form.submit() }}
+    </form>
+    <p>
+        New user?
+        <a href="{{ url_for('auth.register') }}">
+            Click here to register
+        </a>
+    </p>
+</div>
 {% endblock %}

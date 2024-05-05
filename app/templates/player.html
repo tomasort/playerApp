@@ -1,36 +1,68 @@
 {% extends "base.html" %}
 {% block title %}Player{% endblock %}
 {% block head %}
-    {{ super() }}
-    <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
-    <script src="/static/buttons.js"></script>
-    {{ moment.include_moment() }}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="/static/buttons.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{{ moment.include_moment() }}
 {% endblock %}
 {% block body %}
-  <video-js
-    id="video-player"
-    class="video-js"
-    controls
-  >
-    <p class="vjs-no-js">
-      To view this video please enable JavaScript, and consider upgrading to a
-      web browser that
-      <a href="https://videojs.com/html5-video-support/" target="_blank"
-        >supports HTML5 video</a
-      >
-    </p>
-  </video-js>
-  <div id="remote">
-    <button onclick="remote('KEY_CHANNELUP')">Up</button>
-    <button onclick="remote('KEY_CHANNELDOWN')">Down</button>
-    <button onclick="stream('start')">Start stream</button>
-    <button onclick="stream('stop')">Stop stream</button>
-  </div>
+<div id="player" class="player-container">
+    <div class="video-player">
+        <video id="video"></video>
+        <div id="stream-control">
+            <button id="start_stream_button" onclick="stream('start')">Start stream</button>
+            <button id="stop_stream_button" onclick="stream('stop')">Stop stream</button>
+            <button id="restart_stream_button" onclick="stream('restart')">Restart stream</button>
+            <button id="show_settings_button">Show Settings</button>
+        </div>
+    </div>
+    <div id="remote">
+        {% include 'remote.svg' %}
+    </div>
+</div>
+<div class="settings-modal" id="settingsModal">
+    <h1>Settings</h1>
+    <button id="closeSettingsButton" class="close-button"><i class="fas fa-times"></i></button>
+    <form id="settingsForm" method="POST">
+        {{ form.hidden_tag() }}
+        {% import "bootstrap/wtf.html" as wtf %}
+        {{ wtf.quick_form(form) }}
+    </form>
+</div>
+<script src="/static/video.js"></script>
+<script>
+    const settingsModal = document.getElementById('settingsModal');
+    const showSettingsButton = document.getElementById('show_settings_button')
+    const closeSettingsButton = document.getElementById('closeSettingsButton');
+    const overlay = document.createElement('div'); // Create an overlay element
 
-  <p>The local date and time is {{ moment(current_time).format('LLL') }}.</p>
-  <p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
+    showSettingsButton.addEventListener('click', function () {
+        settingsModal.style.display = 'block';
+        document.body.classList.add('disabled'); // Disable scrolling
+        if (!document.querySelector('.overlay')) {
+            overlay.classList.add('overlay');
+            document.body.appendChild(overlay); // Append the overlay to the body
+        }
 
-  <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
-  <script src="/static/video.js"></script>
+        // Close settings modal when clicking outside the modal
+        overlay.addEventListener('click', function (event) {
+            if (event.target === overlay) {
+                settingsModal.style.display = 'none';
+                document.body.classList.remove('disabled'); // Re-enable scrolling
+                overlay.remove(); // Remove the overlay
+            }
+        });
+    });
+
+    closeSettingsButton.addEventListener('click', function () {
+        settingsModal.style.display = 'none';
+        document.body.classList.remove('disabled'); // Re-enable scrolling
+        if (overlay.parentNode === document.body) {
+            overlay.remove(); // Remove the overlay
+        }
+    });
+</script>
 
 {% endblock %}

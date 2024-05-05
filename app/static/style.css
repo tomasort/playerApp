@@ -15,15 +15,54 @@ body {
     background: linear-gradient(#141e30, #243b55);
     margin: 0;
     padding: 0;
+    color: white;
 }
 
-h2 {
-    color: var(--white);
+a {
+    color: inherit;
+    text-decoration: none;
 }
 
-p {
-    color: var(--white);
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 60px;
 }
+
+.header > a {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.nav {
+    display: inline-block;
+}
+
+.nav__list {
+    list-style: none;
+    display: flex;
+
+}
+
+.nav__list-item{
+    margin-right: 36px;
+    font-size: 20px;
+}
+
+.main {
+    padding-left: 60px;
+}
+
+.player-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.settings-modal {
+    color: black;
+}
+
 
 /* Login and Register */
 
@@ -44,11 +83,71 @@ p {
     border-radius: var(--radius);
 }
 
-.video-js {
-    width: 100%;
-    height: 60vh;
+
+#video {
+    /* TODO: figure out a way of maintaining a 1.77 ratio when we make it responsive */
+    width: 960px;
+    height: 540px;
+    border: 1px solid #ccc;
+    background: black;
+    object-fit: fill; /* or contain, depending on desired behavior */
+
 }
 
 #status {
     color: green;
 }
+
+
+#remote {
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+}
+
+body.disabled {
+    overflow: hidden;
+}
+
+.settings-modal {
+    display: none;
+    position: fixed;
+    background-color: white; /* Color of the modal */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Box shadow for the modal */
+    z-index: 1000; /* Ensure it's on top of the overlay */
+    /* Add positioning and centering styles */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Add fixed height and make it scrollable */
+    max-height: 80vh; /* Adjust the height as needed */
+    overflow-y: auto; /* Enable vertical scrolling */
+    z-index: 100;
+}
+
+
+/* Style for the close button */
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333; /* Adjust the color as needed */
+}
+
