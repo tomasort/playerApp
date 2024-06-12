@@ -1,0 +1,194 @@
+- hosts: localhost
+  become: true
+  vars:
+    user_home: "/home/odroid"
+    zshrc_path: "{{ user_home }}/.zshrc"
+  tasks:
+    - name: Install zsh
+      package:
+        name: zsh
+        state: present
+
+    - name: Create .zshrc
+      shell: touch "{{ zshrc_path }}"
+      become: true
+      become_user: odroid
+
+    - name: Install Git
+      package:
+        name: git
+        state: present
+
+    - name: Git personal setup email
+      git_config:
+        name: user.email
+        scope: global
+        value: "tomasvortegar@gmail.com"
+      become: true
+      become_user: odroid
+
+    - name: Git personal setup name
+      git_config:
+        name: user.name
+        scope: global
+        value: "tomasort"
+      become: true
+      become_user: odroid
+
+    - name: Check if Zsh is default shell
+      shell: echo $SHELL
+      register: current_shell
+      become: true
+      become_user: odroid
+
+    - name: Change shell to zsh
+      shell: chsh -s $(which zsh) odroid
+      args:
+        executable: /bin/bash
+
+    - name: Install oh-my-zsh
+      get_url:
+        url: https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh
+        dest: /tmp/install_oh_my_zsh.sh
+      register: downloaded_script
+      
+    - name: Run oh-my-zsh installation script
+      shell: sh /tmp/install_oh_my_zsh.sh --unattended
+      args:
+        creates: "{{ user_home }}/.oh-my-zsh"
+      become: true
+      become_user: odroid
+      
+    - name: Ensure .oh-my-zsh custom plugins directory exists
+      ansible.builtin.file:
+        path: "{{ user_home }}/.oh-my-zsh/custom/plugins"
+        state: directory
+        owner: odroid
+        group: odroid
+      become: true
+
+    - name: Install zsh-autosuggestions
+      ansible.builtin.git:
+        repo: 'https://github.com/zsh-users/zsh-autosuggestions.git'
+        dest: "{{ user_home }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+      become: true
+      become_user: odroid
+
+    - name: Add zsh-autosuggestions to .zshrc
+      ansible.builtin.lineinfile:
+        path: "{{ user_home }}/.zshrc"
+        regexp: '^plugins=\(.*\)$'
+        line: 'plugins=(git zsh-autosuggestions)'
+        state: present
+      become: true
+      become_user: odroid
+
+    - name: Install fzf
+      package:
+        name: fzf
+        state: present
+
+    - name: Install device-tree-compiler
+      package:
+        name: device-tree-compiler
+        state: present
+
+    - name: Install v4l-utils
+      package:
+        name: v4l-utils
+        state: present
+        
+    - name: Install build-essential and dkms
+      package:
+        name: 
+          - build-essential
+          - dkms
+        state: present
+
+    - name: Clone RTL8812AU driver repository at specific commit
+      git:
+        repo: 'https://github.com/aircrack-ng/rtl8812au.git'
+        dest: "{{ user_home }}/rtl8812au"
+        version: '63cf0b4'  # specify the commit hash here
+        force: yes
+
+    - name: Build and install RTL8812AU Wi-Fi driver
+      shell: make dkms_install
+      args:
+        chdir: "{{ user_home }}/rtl8812au"
+
+    - name: Load the Wi-Fi driver module
+      modprobe:
+        name: 88XXau
+        state: present
+
+    - name: Install NetworkManager
+      package:
+        name: network-manager
+        state: present
+
+    - name: Start and enable NetworkManager service
+      systemd:
+        name: NetworkManager
+        state: started
+        enabled: true
+        
+    - name: Check wlan0 status
+      shell: ip link show wlan0
+      register: wlan0_status
+      changed_when: false
+      
+    - name: Ensure wlan0 is up
+      shell: ip link set wlan0 up
+
+    - name: Create .zshrc
+      shell: |
+        echo "export ZSH=\"$HOME/.oh-my-zsh\"
+        ZSH_THEME=\"robbyrussell\"
+        bindkey '^@' autosuggest-accept" >> "{{ zshrc_path }}"
+      become: true
+      become_user: odroid
+      
+    - name: Install dependencies for Docker
+      package:
+        name: 
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Create directory for Docker keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker's official GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+
+    - name: Ensure Docker GPG key is readable
+      file:
+        path: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+
+    - name: Add Docker repository to Apt sources
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+        $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | tee /etc/apt/sources.list.d/docker.list
+      register: add_docker_repo
+
+    - name: Update Apt cache
+      apt:
+        update_cache: yes
+      when: add_docker_repo.changed
+
+    - name: Install Docker packages
+      package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present 
