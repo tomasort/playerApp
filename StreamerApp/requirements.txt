@@ -20,3 +20,8 @@ SQLAlchemy==2.0.4
 typing_extensions==4.5.0
 Werkzeug==2.2.3
 WTForms==3.0.1
+pygobject==3.48.2
+Flask-Mail
+Flask-Moment
+Flask-SocketIO
+Flask-Bootstrap
