@@ -3,9 +3,14 @@ version: '3.8'
 services:
   app:
     build:
-      context: ./app
+      context: ./StreamerApp
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://user:password@db:5432/dev_db
     expose:
       - "8000"
+    depends_on:
+      - db
 
   nginx:
     build:
@@ -15,3 +20,26 @@ services:
     depends_on:
       - app
 
+  signaling-server:
+    build:
+      context: ./signalling-server
+      dockerfile: Dockerfile
+    ports: 
+      - "8443:8443"
+    environment:
+      - WEBRTCSINK_SIGNALLING_SERVER_LOG=debug
+    networks:
+      - webrtc-network
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dev_db
+
+networks:
+  webrtc-network:
+    driver: bridge
