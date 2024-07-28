@@ -25,3 +25,4 @@ Flask-Mail
 Flask-Moment
 Flask-SocketIO
 Flask-Bootstrap
+gevent

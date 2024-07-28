@@ -5,12 +5,16 @@ services:
     build:
       context: ./StreamerApp
     environment:
-      - FLASK_ENV=development
-      - DATABASE_URL=postgresql://user:password@db:5432/dev_db
-    expose:
-      - "8000"
+      - FLASK_CONFIG=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - SIGNALING_SERVER=signaling-server
+    command: gunicorn -k gevent -w 1 -b 0.0.0.0:${FLASK_PORT} playerApp:app
     depends_on:
-      - db
+      - postgres
+    networks:
+      - webrtc-network
+      - proxy-server
+      - database
 
   nginx:
     build:
@@ -19,27 +23,34 @@ services:
       - "80:80"
     depends_on:
       - app
+    networks:
+      - proxy-server
 
   signaling-server:
     build:
       context: ./signalling-server
-      dockerfile: Dockerfile
     ports: 
       - "8443:8443"
     environment:
-      - WEBRTCSINK_SIGNALLING_SERVER_LOG=debug
+      - WEBRTCSINK_SIGNALLING_SERVER_LOG=info
     networks:
       - webrtc-network
 
-  db:
+  postgres:
     image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=dev_db
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ./postgres-data/postgres:/var/lib/postgresql/data
+    networks:
+      - database
 
 networks:
   webrtc-network:
+    driver: bridge
+  database:
+    driver: bridge
+  proxy-server:
     driver: bridge

@@ -30,7 +30,7 @@ a {
     padding: 20px 60px;
 }
 
-.header > a {
+.header>a {
     font-size: 40px;
     font-weight: bold;
 }
@@ -45,7 +45,7 @@ a {
 
 }
 
-.nav__list-item{
+.nav__list-item {
     margin-right: 36px;
     font-size: 20px;
 }
@@ -90,7 +90,8 @@ a {
     height: 540px;
     border: 1px solid #ccc;
     background: black;
-    object-fit: fill; /* or contain, depending on desired behavior */
+    object-fit: fill;
+    /* or contain, depending on desired behavior */
 
 }
 
@@ -123,31 +124,36 @@ body.disabled {
 .settings-modal {
     display: none;
     position: fixed;
-    background-color: white; /* Color of the modal */
+    background-color: white;
+    /* Color of the modal */
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Box shadow for the modal */
-    z-index: 1000; /* Ensure it's on top of the overlay */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    /* Box shadow for the modal */
+    z-index: 1000;
+    /* Ensure it's on top of the overlay */
     /* Add positioning and centering styles */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     /* Add fixed height and make it scrollable */
-    max-height: 80vh; /* Adjust the height as needed */
-    overflow-y: auto; /* Enable vertical scrolling */
+    max-height: 80vh;
+    /* Adjust the height as needed */
+    overflow-y: auto;
+    /* Enable vertical scrolling */
     z-index: 100;
 }
 
 
 /* Style for the close button */
 .close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #333; /* Adjust the color as needed */
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    /* Adjust the color as needed */
 }
-

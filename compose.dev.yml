@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - FLASK_DEBUG=1
+      - FLASK_CONFIG=development
+      - FLASK_APP=playerApp.py
+      - DEV_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    command: sh -c "flask db init && flask db migrate && flask db upgrade && flask run -h 0.0.0.0 -p ${FLASK_PORT}"
+    expose: 
+      - "${FLASK_PORT}"
+    ports:
+      - "${FLASK_PORT}:${FLASK_PORT}"
+    volumes: 
+      - type: bind
+        source: ./StreamerApp
+        target: /app/
+    tmpfs:
+      - /app/migrations
+    depends_on:
+      - postgres
+
+  signaling-server:
+    environment:
+      - WEBRTCSINK_SIGNALLING_SERVER_LOG=debug

@@ -40,13 +40,3 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-
-ENV FLASK_APP=playerApp.py
-ENV DEV_DATABASE_URL=
-
-
-CMD ["flask", "run"]
-
-# # Run the application with Gunicorn
-# CMD ["gunicorn", "-b", "0.0.0.0:5000", "playerApp:app"]
-

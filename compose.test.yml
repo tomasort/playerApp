@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - FLASK_CONFIG=testing
+    command: flask run -h 0.0.0.0 -p ${FLASK_PORT}
+    volumes: 
+      - type: bind
+        source: ./StreamerApp
+        target: /app/
+    depends_on:
+      - postgres
+
+  signaling-server:
+    environment:
+      - WEBRTCSINK_SIGNALLING_SERVER_LOG=debug
+
+  postgres:
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
