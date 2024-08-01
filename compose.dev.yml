@@ -16,7 +16,6 @@ services:
       - type: bind
         source: ./StreamerApp
         target: /app/
-    tmpfs:
       - /app/migrations
     depends_on:
       - postgres
@@ -24,3 +23,7 @@ services:
   signaling-server:
     environment:
       - WEBRTCSINK_SIGNALLING_SERVER_LOG=debug
+
+  postgres:
+    volumes:
+      - /var/lib/postgresql/data
