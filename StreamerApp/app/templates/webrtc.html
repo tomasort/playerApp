@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="gstwebrtc-api-2.0.0.min.js"></script>
+  <script src="/static/gstwebrtc-api-2.0.0.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -232,7 +232,7 @@
       const signalingProtocol = window.location.protocol.startsWith("https") ? "wss" : "ws";
       const gstWebRTCConfig = {
         meta: { name: `WebClient-${Date.now()}` },
-        signalingServerUrl: `${signalingProtocol}://${window.location.host}:8443/webrtc`,
+        signalingServerUrl: `${signalingProtocol}://192.168.1.50:8443/webrtc`,
       };
 
       const api = new GstWebRTCAPI(gstWebRTCConfig);

@@ -32,7 +32,8 @@ RUN apk add --no-cache \
     libpq-dev \
     jpeg-dev \
     zlib-dev \
-    py3-greenlet
+    py3-greenlet \
+    v4l-utils
 
 RUN pip install --upgrade pip
 
@@ -40,3 +41,7 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+COPY ./utils/remotes /remotes
+
+# RUN rmmod uvcvideo 
+# RUN modprobe -v uvcvideo# 

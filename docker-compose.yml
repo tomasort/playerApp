@@ -8,9 +8,21 @@ services:
       - FLASK_CONFIG=production
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - SIGNALING_SERVER=signaling-server
+      - VIDEO_SOURCE=/dev/video0
+      - AUDIO_SOURCE=hw:0,0
     command: gunicorn -k gevent -w 1 -b 0.0.0.0:${FLASK_PORT} playerApp:app
+    devices:
+      - /dev/:/dev/
+      - /dev/snb:/dev/snb
+    volumes: 
+      - /lib/modules:/lib/modules
+    group_add:
+      - video
+      - audio
+    privileged: true
     depends_on:
       - postgres
+      - signaling-server
     networks:
       - webrtc-network
       - proxy-server

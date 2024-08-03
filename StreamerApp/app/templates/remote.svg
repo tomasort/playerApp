@@ -50,61 +50,61 @@
 <tspan x="14.1690638" y="16.1079207">*</tspan>
 </text>
 </g>
-<g id="KEY_0" onclick="remote('KEY_0')" transform="translate(55.953074, 96.914598)">
+<g id="KEY_NUMERIC_0" onclick="remote('KEY_NUMERIC_0')" transform="translate(55.953074, 96.914598)">
 <rect fill="#4B4B4B" height="19" id="Rectangle" rx="9.5" stroke="#C5C1C1" stroke-width="3" width="33" x="1.5" y="1.5"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="0" letter-spacing="0.2702464">
 <tspan x="13.123379" y="17.063357">0</tspan>
 </text>
 </g>
-<g id="KEY_9" onclick="remote('KEY_9')" transform="translate(129.937265, 75.853311) rotate(-5.000000) translate(-129.937265, -75.853311) translate(112.084266, 64.926738)">
+<g id="KEY_NUMERIC_9" onclick="remote('KEY_NUMERIC_9')" transform="translate(129.937265, 75.853311) rotate(-5.000000) translate(-129.937265, -75.853311) translate(112.084266, 64.926738)">
 <rect fill="#4B4B4B" height="18.8531452" id="Rectangle" rx="9.4265726" stroke="#C5C1C1" stroke-width="3" width="32.7059978" x="1.5" y="1.5"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="9" letter-spacing="0.2702464">
 <tspan x="13.4094964" y="17.6264256">9</tspan>
 </text>
 </g>
-<g id="KEY_8" onclick="remote('KEY_8')" transform="translate(55.953074, 64.652903)">
+<g id="KEY_NUMERIC_8" onclick="remote('KEY_NUMERIC_8')" transform="translate(55.953074, 64.652903)">
 <rect fill="#4B4B4B" height="19" id="Rectangle" rx="9.5" stroke="#C5C1C1" stroke-width="3" width="33" x="1.5" y="1.5"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="8" letter-spacing="0.2702464">
 <tspan x="13.123379" y="17.701196">8</tspan>
 </text>
 </g>
-<g id="KEY_7" onclick="remote('KEY_7')" transform="translate(18.737376, 75.853311) rotate(5.000000) translate(-18.737376, -75.853311) translate(0.884378, 64.926738)">
+<g id="KEY_NUMERIC_7" onclick="remote('KEY_NUMERIC_7')" transform="translate(18.737376, 75.853311) rotate(5.000000) translate(-18.737376, -75.853311) translate(0.884378, 64.926738)">
 <rect fill="#4B4B4B" height="18.8531452" id="Rectangle" rx="9.4265726" stroke="#C5C1C1" stroke-width="3" width="32.7059978" x="1.5" y="1.5"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="7" letter-spacing="0.2702464">
 <tspan x="12.5336268" y="17.6264256">7</tspan>
 </text>
 </g>
-<g id="KEY_6" onclick="remote('KEY_6')" transform="translate(129.937265, 43.534567) rotate(-5.000000) translate(-129.937265, -43.534567) translate(112.084266, 32.607994)">
+<g id="KEY_NUMERIC_6" onclick="remote('KEY_NUMERIC_6')" transform="translate(129.937265, 43.534567) rotate(-5.000000) translate(-129.937265, -43.534567) translate(112.084266, 32.607994)">
 <rect fill="#4B4B4B" height="18.8531452" id="Rectangle" rx="9.4265726" stroke="#C5C1C1" stroke-width="3" width="32.7059978" x="1.5" y="1.5"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="6" letter-spacing="0.2702464">
 <tspan x="13.4094964" y="17.2758379">6</tspan>
 </text>
 </g>
-<g id="KEY_5" onclick="remote('KEY_5')" transform="translate(55.953074, 32.391209)">
+<g id="KEY_NUMERIC_5" onclick="remote('KEY_NUMERIC_5')" transform="translate(55.953074, 32.391209)">
 <rect fill="#4B4B4B" height="19" id="Rectangle" rx="9.5" stroke="#C5C1C1" stroke-width="3" width="33" x="1.5" y="1.5"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="5" letter-spacing="0.2702464">
 <tspan x="13.123379" y="17.3482524">5</tspan>
 </text>
 </g>
-<g id="KEY_4" onclick="remote('KEY_4')" transform="translate(18.737376, 43.534567) rotate(5.000000) translate(-18.737376, -43.534567) translate(0.884378, 32.607994)">
+<g id="KEY_NUMERIC_4" onclick="remote('KEY_NUMERIC_4')" transform="translate(18.737376, 43.534567) rotate(5.000000) translate(-18.737376, -43.534567) translate(0.884378, 32.607994)">
 <rect fill="#4B4B4B" height="18.8531452" id="Rectangle" rx="9.4265726" stroke="#C5C1C1" stroke-width="3" width="32.7059978" x="1.5" y="1.5"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="4" letter-spacing="0.2702464">
 <tspan x="12.5336268" y="17.2758379">4</tspan>
 </text>
 </g>
-<g id="KEY_3" onclick="remote('KEY_3')" transform="translate(129.934007, 12.478218) rotate(-5.000000) translate(-129.934007, -12.478218) translate(112.081008, 1.514270)">
+<g id="KEY_NUMERIC_3" onclick="remote('KEY_NUMERIC_3')" transform="translate(129.934007, 12.478218) rotate(-5.000000) translate(-129.934007, -12.478218) translate(112.081008, 1.514270)">
 <rect fill="#4B4B4B" height="18.8531452" id="Rectangle" rx="9.4265726" stroke="#C5C1C1" stroke-width="3" width="32.7059978" x="1.5" y="1.57474968"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="3" letter-spacing="0.2702464">
 <tspan x="13.4094964" y="17">3</tspan>
 </text>
 </g>
-<g id="KEY_2" onclick="remote('KEY_2')" transform="translate(55.953074, 1.418073)">
+<g id="KEY_NUMERIC_2" onclick="remote('KEY_NUMERIC_2')" transform="translate(55.953074, 1.418073)">
 <rect fill="#4B4B4B" height="18.993072" id="Rectangle" rx="9.496536" stroke="#C5C1C1" stroke-width="3" width="33" x="1.5" y="1.50799628"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="2" letter-spacing="0.2702464">
 <tspan x="13.123379" y="17">2</tspan>
 </text>
 </g>
-<g id="KEY_1" onclick="remote('KEY_1')" transform="translate(18.740634, 12.478218) rotate(5.000000) translate(-18.740634, -12.478218) translate(0.887635, 1.514270)">
+<g id="KEY_NUMERIC_1" onclick="remote('KEY_NUMERIC_1')" transform="translate(18.740634, 12.478218) rotate(5.000000) translate(-18.740634, -12.478218) translate(0.887635, 1.514270)">
 <rect fill="#4B4B4B" height="18.8531452" id="Rectangle" rx="9.4265726" stroke="#C5C1C1" stroke-width="3" width="32.7059978" x="1.5" y="1.57474968"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="16" font-weight="bold" id="1" letter-spacing="0.2702464">
 <tspan x="12.5336268" y="17">1</tspan>

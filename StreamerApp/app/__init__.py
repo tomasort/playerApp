@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+import json
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -6,12 +7,15 @@ from flask_moment import Moment
 from flask_socketio import SocketIO
 from flask_bootstrap import Bootstrap
 from config import config
+from app.streaming import GstreamerPipeline
 
 db = SQLAlchemy()
 moment = Moment()
 socketio = SocketIO()
 mail = Mail()
 bootstrap = Bootstrap()
+
+buttons = set(json.load(open('./app/static/buttons.json')))
 
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
@@ -40,5 +44,7 @@ def create_app(config_name):
     
     from .api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api')
+
+    app.pipeline = GstreamerPipeline(v_src=app.config['VIDEO_SOURCE'], a_src=app.config['AUDIO_SOURCE'])
 
     return app

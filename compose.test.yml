@@ -4,7 +4,7 @@ services:
   app:
     environment:
       - FLASK_CONFIG=testing
-    command: flask run -h 0.0.0.0 -p ${FLASK_PORT}
+    command: pytest -rx
     volumes: 
       - type: bind
         source: ./StreamerApp
