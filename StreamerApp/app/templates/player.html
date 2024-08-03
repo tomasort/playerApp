@@ -4,19 +4,21 @@
 {{ super() }}
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="/static/buttons.js"></script>
+<script src="/static/gstwebrtc-api-2.0.0.min.js"></script>
+<script src="/static/webrtc.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 {{ moment.include_moment() }}
 {% endblock %}
 {% block body %}
+<div id="stream-control">
+    <button id="start_stream_button" onclick="stream('start')">Start stream</button>
+    <button id="stop_stream_button" onclick="stream('stop')">Stop stream</button>
+    <button id="restart_stream_button" onclick="stream('restart')">Restart stream</button>
+    <button id="show_settings_button">Show Settings</button>
+</div>
 <div id="player" class="player-container">
     <div class="video-player">
         <video id="video"></video>
-        <div id="stream-control">
-            <button id="start_stream_button" onclick="stream('start')">Start stream</button>
-            <button id="stop_stream_button" onclick="stream('stop')">Stop stream</button>
-            <button id="restart_stream_button" onclick="stream('restart')">Restart stream</button>
-            <button id="show_settings_button">Show Settings</button>
-        </div>
     </div>
     <div id="remote">
         {% include 'remote.svg' %}

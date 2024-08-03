@@ -7,7 +7,7 @@ services:
       - FLASK_CONFIG=development
       - FLASK_APP=playerApp
       - DEV_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-    command: sh -c "flask db upgrade && flask run -h 0.0.0.0 -p ${FLASK_PORT}"
+    command: sh -c "flask db init && flask db migrate && flask db upgrade && flask run -h 0.0.0.0 -p ${FLASK_PORT}"
     # command: sh -c "rmmod uvcvideo && modprobe uvcvideo && flask db upgrade && flask run -h 0.0.0.0 -p ${FLASK_PORT}"
     expose: 
       - "${FLASK_PORT}"

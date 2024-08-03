@@ -45,6 +45,7 @@ def button_pressed():
     button = request.form.get('button')
     command = ['/usr/bin/ir-ctl', '-K', button, '-k', '/remotes/fision.toml', '-d', '/dev/lirc0']
     button_press = subprocess.Popen(command)
+    return "Button pressed successfully"
 
 # TODO: implement the functionality of checking if the user has permission for contorlling the stream
 @main.route('/stream-control', methods=['POST'])
@@ -52,7 +53,7 @@ def stream_control():
     action = request.form.get('action')
     if action == "start":
         current_app.pipeline.set_video_source('/dev/video1')
-        current_app.pipeline.set_audio_source('hw:0,0')
+        current_app.pipeline.set_audio_source('hw:1,0')
         current_app.pipeline.start()
     elif action == "stop":
         current_app.pipeline.stop()
