@@ -2,8 +2,8 @@ import os
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'This string is an extreamly hard to guess')
-    VIDEO_SOURCE = os.environ.get('VIDEO_SOURCE', "/dev/video0")
-    AUDIO_SOURCE = os.environ.get('AUDIO_SOURCE', "hw:CARD=MS2109,DEV=0")
+    VIDEO_SOURCE = os.environ.get('VIDEO_SOURCE', None)
+    AUDIO_SOURCE = os.environ.get('AUDIO_SOURCE', None)
     ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', "example@gmail.com")
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp-relay.sendinblue.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', '587'))

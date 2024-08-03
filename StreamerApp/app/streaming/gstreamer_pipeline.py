@@ -5,7 +5,7 @@ from gi.repository import Gst, GstWebRTC, GLib
 from .media_pipeline import MediaPipeline
 
 class GstreamerPipeline(MediaPipeline):
-    def __init__(self, v_src=None, a_src=None, res=(640, 480), test_src=False):
+    def __init__(self, v_src=None, a_src=None, res=(1280, 720), test_src=False):
         super().__init__(v_src, a_src, res)
         Gst.init(None)
         self.pipeline = None

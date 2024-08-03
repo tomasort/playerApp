@@ -266,7 +266,7 @@
 <tspan x="8.71680931" y="14.597456">MENU</tspan>
 </text>
 </g>
-<g id="KEY_G" onclick="remote('KEY_G')" transform="translate(34.423534, 33.438507) rotate(-35.000000) translate(-34.423534, -33.438507) translate(11.881102, 23.051304)">
+<g id="KEY_GUIDE" onclick="remote('KEY_GUIDE')" transform="translate(34.423534, 33.438507) rotate(-35.000000) translate(-34.423534, -33.438507) translate(11.881102, 23.051304)">
 <rect fill="#4B4B4B" height="17.7744057" id="Rectangle" rx="8.88720283" stroke="#C5C1C1" stroke-width="3" width="42.0848649" x="1.5" y="1.5"/>
 <text fill="#C5C1C1" font-family="Thonburi-Bold, Thonburi" font-size="10" font-weight="bold" id="GUIDE" letter-spacing="0.168904">
 <tspan x="8.03079481" y="14.597456">GUIDE</tspan>
