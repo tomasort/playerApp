@@ -1,38 +1,23 @@
-FROM python:3.9-alpine3.19
+FROM python:3.12.5-alpine3.19
 
 WORKDIR /app
 
-# Enable the 'edge' repository for newer packages
+# Enable the 'edge' repository for newer packages (in this case gst-plugins-rs)
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && apk update
 
 # Install GStreamer and its plugins (including WebRTC and Python bindings)
-RUN apk add --no-cache \
+RUN apk add --no-cache \ 
+    postgresql15 \
+    build-base \
     gstreamer \
+    gstreamer-tools \
     gst-plugins-base \
     gst-plugins-good \
     gst-plugins-bad \
     gst-plugins-ugly \
-    gst-rtsp-server \
-    gst-libav \
-    musl-dev \
-    cairo-dev \
-    pkgconf \
-    gcc \
     gst-plugins-rs \
-    python3-dev \
-    gobject-introspection-dev \
-    gstreamer-tools \
-    gstreamer-dev \
-    g++ \
-    libffi-dev \
-    libnice-gstreamer \
-    postgresql15 \
-    build-base \
-    linux-headers \
-    libpq-dev \
-    jpeg-dev \
-    zlib-dev \
     py3-greenlet \
+    gobject-introspection-dev \
     v4l-utils
 
 RUN pip install --upgrade pip
