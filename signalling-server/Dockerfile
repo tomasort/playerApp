@@ -1,13 +1,16 @@
-FROM rust:latest
+FROM rust:1.80.1-alpine3.20
 
-WORKDIR /usr/src/app
+WORKDIR /app
+
+RUN apk add --no-cache \
+    build-base \
+    libressl-dev
 
 # Copy only the necessary directories
-COPY ./signalling signalling
-COPY ./protocol protocol
+COPY . .
 
 # Build and install the signalling server
-WORKDIR /usr/src/app/signalling
+WORKDIR /app/signalling
 
 RUN cargo build 
 

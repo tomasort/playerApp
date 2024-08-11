@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./StreamerApp
+      dockerfile: ./docker/local/Dockerfile
+    environment:
+      - FLASK_DEBUG=1
+      - FLASK_CONFIG=development
+      - FLASK_APP=playerApp
+      - DEV_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - SECRET_KEY=q49qZZEt7qaQUBIOjLJdCA # test secret key (only for dev and tests, not for production!)
+    command: sh -c "flask run -h 0.0.0.0 -p ${FLASK_PORT}"
+    expose:
+      - "${FLASK_PORT}"
+    ports:
+      - "${FLASK_PORT}:${FLASK_PORT}"
+    volumes:
+      - ./StreamerApp:/app/
+      - /app/migrations
+
+  signaling-server:
+    environment:
+      - WEBRTCSINK_SIGNALLING_SERVER_LOG=debug
+
+  postgres:
+    volumes:
+      - /var/lib/postgresql/data
+
+  nginx:
+    ports:
+      - 80:80

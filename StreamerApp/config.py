@@ -14,6 +14,12 @@ class Config:
     MAIL_SENDER = 'PlayerApp Admin <example@gmail.com>'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SSL_REDIRECT = False
+    WEBRTC_URI = os.environ.get('WEBRTC_URI', "ws://127.0.0.1:8443")
+    CELERY=dict(
+        broker_url=os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0"),
+        result_backend=os.environ.get("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/0"),
+        task_ignore_result=True,
+    )
 
     @staticmethod
     def init_app(app):

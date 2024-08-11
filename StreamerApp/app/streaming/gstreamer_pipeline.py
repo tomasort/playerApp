@@ -5,12 +5,15 @@ from gi.repository import Gst, GstWebRTC, GLib
 from .media_pipeline import MediaPipeline
 
 class GstreamerPipeline(MediaPipeline):
-    def __init__(self, v_src=None, a_src=None, res=(1280, 720), test_src=False):
+    def __init__(self, v_src=None, a_src=None, webrtc_uri=None, res=(1280, 720), test_src=False):
         super().__init__(v_src, a_src, res)
         Gst.init(None)
         self.pipeline = None
         self.loop = None
         self.test_src = test_src
+        self.webrtc_uri = webrtc_uri
+        if self.webrtc_uri is None:
+            self.webrtc_uri = "ws://localhost:8443" # this is the default uri for the signalling server in webrtsink
 
     def start(self):
         if self.status == 1:
@@ -22,10 +25,11 @@ class GstreamerPipeline(MediaPipeline):
             gstreamer_video_src = "videotestsrc"
             gstreamer_audio_src = "audiotestsrc"
         pipeline_str = f"""
-        webrtcsink signaller::uri=ws://signaling-server:8443 name=ws meta="meta,name=gst-stream"
+        webrtcsink signaller::uri={self.webrtc_uri} name=ws meta="meta,name=gst-stream"
         {gstreamer_video_src} ! video/x-raw,width={self.resolution[0]},height={self.resolution[1]} ! videoconvert ! queue ! ws.
         {gstreamer_audio_src} ! audio/x-raw ! audioconvert ! audioresample ! queue ! ws.
         """
+        print(pipeline_str)
 
         self.pipeline = Gst.parse_launch(pipeline_str)
         

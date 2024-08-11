@@ -1,48 +1,71 @@
 version: '3.8'
 
+x-common-env: &common-env
+  FLASK_CONFIG: production
+  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  CELERY_BROKER_URL: amqp://${RABBIT_USERNAME}:${RABBIT_USER_PASSWORD}@rabbit:5672/
+  CELERY_RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+  SIGNALING_SERVER: signaling-server
+  VIDEO_SOURCE: ${VIDEO_SOURCE}
+  AUDIO_SOURCE: ${AUDIO_SOURCE}
+  SECRET_KEY: ${SECRET_KEY}
+  WEBRTC_URI: ws://signaling-server:8443
+  FLOWER_PORT: ${FLOWER_PORT}
+  FLASK_PORT: ${FLASK_PORT}
+
+x-app-base: &app-base
+  build:
+    context: ./StreamerApp
+    dockerfile: ./docker/prod/Dockerfile
+  environment: *common-env
+  devices:
+    - /dev/:/dev/
+    - /dev/snb:/dev/snb
+  volumes:
+    - /lib/modules:/lib/modules
+  group_add:
+    - video
+    - audio
+  privileged: true
+  depends_on:
+    - postgres
+    - signaling-server
+  networks:
+    - webrtc-network
+    - proxy-server
+    - database
+    - messages
+
 services:
-  app:
-    build:
-      context: ./StreamerApp
-    environment:
-      - FLASK_CONFIG=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - SIGNALING_SERVER=signaling-server
-      - VIDEO_SOURCE=${VIDEO_SOURCE}
-      - AUDIO_SOURCE=${AUDIO_SOURCE}
-    command: gunicorn -k gevent -w 1 -b 0.0.0.0:${FLASK_PORT} playerApp:app
-    devices:
-      - /dev/:/dev/
-      - /dev/snb:/dev/snb
-    volumes: 
-      - /lib/modules:/lib/modules
-    group_add:
-      - video
-      - audio
-    privileged: true
-    depends_on:
-      - postgres
-      - signaling-server
-    networks:
-      - webrtc-network
-      - proxy-server
-      - database
+  web:
+    <<: *app-base
+    command: /start.sh
+
+  worker:
+    <<: *app-base
+    command: /worker.sh
+
+  flower:
+    <<: *app-base
+    command: /flower.sh
+    ports:
+      - ${FLOWER_PORT}:${FLOWER_PORT}
 
   nginx:
     build:
       context: ./nginx
     ports:
-      - "80:80"
+      - 80:80
     depends_on:
-      - app
+      - web
     networks:
       - proxy-server
 
   signaling-server:
     build:
       context: ./signalling-server
-    ports: 
-      - "8443:8443"
+    ports:
+      - 8443:8443
     environment:
       - WEBRTCSINK_SIGNALLING_SERVER_LOG=info
     networks:
@@ -59,10 +82,21 @@ services:
     networks:
       - database
 
+  rabbit:
+    build: ./rabbit
+    environment:
+      - RABBIT_USERNAME=${RABBIT_USERNAME}
+      - RABBIT_USER_PASSWORD=${RABBIT_USER_PASSWORD}
+    networks:
+      - messages
+      - database
+
 networks:
   webrtc-network:
     driver: bridge
   database:
     driver: bridge
   proxy-server:
+    driver: bridge
+  messages:
     driver: bridge
