@@ -62,7 +62,7 @@ class MediaPipeline(ABC):
         self.v_src = src
         self._log(f"Video source set to {src}")
 
-    def get_video_source(self) -> str:
+    def get_video_source(self):
         """
         Gets the current video source.
 
@@ -81,7 +81,7 @@ class MediaPipeline(ABC):
         self.a_src = src
         self._log(f"Audio source set to {src}")
 
-    def get_audio_source(self) -> str:
+    def get_audio_source(self):
         """
         Gets the current audio source.
 
