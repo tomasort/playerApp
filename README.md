@@ -31,3 +31,5 @@ FLASK_PORT=5000
 3. Save the file.
 
 Once you have set up the `.env` file, you can proceed with running the project using Docker Compose or your preferred method.
+
+This is a test. I just wan to know if I can push it to github.com
