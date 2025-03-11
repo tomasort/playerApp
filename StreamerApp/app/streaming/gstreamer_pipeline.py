@@ -14,7 +14,8 @@ class GstreamerPipeline(MediaPipeline):
         self.test_src = test_src
         self.webrtc_uri = webrtc_uri
         if self.webrtc_uri is None:
-            self.webrtc_uri = "ws://localhost:8443"  # this is the default uri for the signalling server in webrtsink
+            # this is the default uri for the signalling server in webrtsink
+            self.webrtc_uri = "ws://localhost:8443"
 
     def start(self):
         if self.status == 1:

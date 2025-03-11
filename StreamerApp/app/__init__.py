@@ -24,6 +24,7 @@ buttons = set(json.load(open('./app/static/buttons.json')))
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
+
 def celery_init_app(app: Flask) -> Celery:
     class FlaskTask(Task):
         def __call__(self, *args: object, **kwargs: object) -> object:
@@ -36,10 +37,12 @@ def celery_init_app(app: Flask) -> Celery:
     app.extensions["celery"] = celery_app
     return celery_app
 
+
 def setup_logging(app):
     if not os.path.exists('logs'):
         os.mkdir('logs')
-    file_handler = RotatingFileHandler('logs/myapp.log', maxBytes=10240, backupCount=10)
+    file_handler = RotatingFileHandler(
+        'logs/myapp.log', maxBytes=10240, backupCount=10)
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
     ))
@@ -47,6 +50,7 @@ def setup_logging(app):
     app.logger.addHandler(file_handler)
 
     app.logger.info('MyApp startup')
+
 
 def create_app(config_name):
     app = Flask(__name__)
@@ -72,11 +76,11 @@ def create_app(config_name):
 
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
-    
+
     from .api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api')
 
-    setup_logging(app)  
+    setup_logging(app)
     app.logger.info('The App has been created!')
 
     return app
