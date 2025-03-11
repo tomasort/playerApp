@@ -14,6 +14,7 @@ POSTGRES_PASSWORD=password
 POSTGRES_DB=db
 COMPOSE_FILE=docker-compose.yml:compose.dev.yml
 FLASK_PORT=5000
+SECRETE=secret_key
 ```
 
 ### Explanation of Environment Variables
