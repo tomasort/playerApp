@@ -1,5 +1,3 @@
-version: '3.8'
-
 x-common-env: &common-env
   FLASK_CONFIG: production
   DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
