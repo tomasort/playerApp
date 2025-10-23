@@ -71,7 +71,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const signalingProtocol = window.location.protocol.startsWith("https") ? "wss" : "ws";
     const gstWebRTCConfig = {
         meta: { name: `WebClient-${Date.now()}` },
-        signalingServerUrl: `${signalingProtocol}://192.168.1.50:8443/webrtc`,
+        signalingServerUrl: `${signalingProtocol}://${window.location.hostname}:8443/webrtc`,
     };
 
     const api = new GstWebRTCAPI(gstWebRTCConfig);

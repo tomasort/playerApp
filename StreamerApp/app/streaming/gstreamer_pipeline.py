@@ -26,11 +26,18 @@ class GstreamerPipeline(MediaPipeline):
         if self.test_src:
             gstreamer_video_src = "videotestsrc"
             gstreamer_audio_src = "audiotestsrc"
+        
+        # Build pipeline - always include video, optionally include audio
+        # Use MJPG format for higher resolutions since most cameras support it
+        # and decode to raw video for processing
         pipeline_str = f"""
         webrtcsink signaller::uri={self.webrtc_uri} name=ws meta="meta,name=gst-stream"
         {gstreamer_video_src} ! video/x-raw,width={self.resolution[0]},height={self.resolution[1]} ! videoconvert ! queue ! ws.
-        {gstreamer_audio_src} ! audio/x-raw ! audioconvert ! audioresample ! queue ! ws.
         """
+        
+        # Add audio pipeline only if audio source is provided and not empty
+        if self.a_src is not None and str(self.a_src).strip():
+            pipeline_str += f"{gstreamer_audio_src} ! audio/x-raw ! audioconvert ! audioresample ! queue ! ws."
         print(pipeline_str)
 
         self.pipeline = Gst.parse_launch(pipeline_str)
