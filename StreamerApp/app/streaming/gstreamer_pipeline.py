@@ -6,7 +6,7 @@ gi.require_version('GstWebRTC', '1.0')
 
 
 class GstreamerPipeline(MediaPipeline):
-    def __init__(self, v_src=None, a_src=None, webrtc_uri=None, res=(1280, 720), test_src=False):
+    def __init__(self, v_src=None, a_src=None, webrtc_uri=None, res=(1280, 720), test_src=True):
         super().__init__(v_src, a_src, res)
         Gst.init(None)
         self.pipeline = None
