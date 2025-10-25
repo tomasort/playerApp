@@ -2,8 +2,8 @@
 - name: Setup
   hosts: localhost
   vars:
-    - gpio_ir_pin: 15 # pin used for IR emitter 
-    - gpiochip: gpiochip0
+    gpio_ir_pin: 15 # pin used for IR emitter 
+    gpiochip: gpiochip0
   tasks:
     - name: Check kernel version
       shell: uname -r | awk -F'-' '{print $1}'
