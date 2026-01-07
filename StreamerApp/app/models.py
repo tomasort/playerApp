@@ -7,6 +7,36 @@ from datetime import datetime
 from itsdangerous import TimedSerializer as Serializer
 
 
+class PipelineSession(db.Model):
+    __tablename__ = 'pipeline_sessions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.String(255), unique=True, nullable=True)
+    status = db.Column(db.String(20), default='starting')  # 'starting', 'running', 'stopped', 'failed'
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    stopped_at = db.Column(db.DateTime, nullable=True)
+    started_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Pipeline config at start time
+    video_source = db.Column(db.String(255))
+    audio_source = db.Column(db.String(255))
+    webrtc_uri = db.Column(db.String(255))
+    test_mode = db.Column(db.Boolean, default=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='pipeline_sessions')
+    
+    @classmethod
+    def get_active_session(cls):
+        return cls.query.filter_by(status='running').first()
+    
+    def stop_session(self):
+        self.status = 'stopped'
+        self.stopped_at = datetime.utcnow()
+        db.session.add(self)
+        db.session.commit()
+
+
 class StreamSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))

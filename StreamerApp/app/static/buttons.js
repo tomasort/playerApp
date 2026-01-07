@@ -51,8 +51,89 @@ function remote(button) {
 }
 
 function stream(action) {
-    var xhr_stream = new XMLHttpRequest(); // Renamed to avoid conflict
-    xhr_stream.open('POST', '/stream-control', true);
-    xhr_stream.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    xhr_stream.send(`action=${action}`);
+    const endpoints = {
+        'start': '/stream/start',
+        'stop': '/stream/stop', 
+        'restart': '/stream/restart'
+    };
+    
+    const endpoint = endpoints[action];
+    if (!endpoint) {
+        console.error('Invalid stream action:', action);
+        return;
+    }
+    
+    // Disable button during request
+    const button = document.getElementById(`${action}_stream_button`);
+    if (button) {
+        button.disabled = true;
+        const originalText = button.textContent;
+        button.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)}ing...`;
+        
+        // Re-enable after delay regardless of outcome
+        setTimeout(() => {
+            button.disabled = false;
+            button.textContent = originalText;
+        }, 2000);
+    }
+    
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Stream action successful:', data.message);
+            if (data.task_id) {
+                console.log('Task ID:', data.task_id);
+            }
+            // Update stream status after successful action
+            updateStreamStatus();
+        } else {
+            console.error('Stream action failed:', data.error);
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Stream request failed:', error);
+        alert('Request failed: ' + error.message);
+    });
 }
+
+function updateStreamStatus() {
+    fetch('/stream/status')
+    .then(response => response.json())
+    .then(status => {
+        console.log('Stream status:', status);
+        
+        // Update button states based on status
+        const startBtn = document.getElementById('start_stream_button');
+        const stopBtn = document.getElementById('stop_stream_button');
+        const restartBtn = document.getElementById('restart_stream_button');
+        
+        if (status.is_running) {
+            if (startBtn) startBtn.disabled = true;
+            if (stopBtn) stopBtn.disabled = false;
+            if (restartBtn) restartBtn.disabled = false;
+        } else {
+            if (startBtn) startBtn.disabled = false;
+            if (stopBtn) stopBtn.disabled = true;
+            if (restartBtn) restartBtn.disabled = true;
+        }
+        
+        // Could add status indicator to UI
+        // Example: document.getElementById('status-indicator').textContent = 
+        //          status.is_running ? 'Running' : 'Stopped';
+    })
+    .catch(error => {
+        console.error('Failed to get stream status:', error);
+    });
+}
+
+// Update status when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateStreamStatus();
+});
