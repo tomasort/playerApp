@@ -1,13 +1,13 @@
 x-common-env: &common-env
+  FLASK_APP: playerApp.py
   FLASK_CONFIG: production
   DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
   CELERY_BROKER_URL: amqp://${RABBIT_USERNAME}:${RABBIT_USER_PASSWORD}@rabbit:5672/
-  CELERY_RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-  SIGNALING_SERVER: signaling-server
+  CELERY_RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
   VIDEO_SOURCE: ${VIDEO_SOURCE}
   AUDIO_SOURCE: ${AUDIO_SOURCE}
   SECRET_KEY: ${SECRET_KEY}
-  WEBRTC_URI: ws://signaling-server:8443
+  WHIP_ENDPOINT: http://mediamtx:8889/stream/whip
   FLOWER_PORT: ${FLOWER_PORT}
   FLASK_PORT: ${FLASK_PORT}
 
@@ -27,7 +27,7 @@ x-app-base: &app-base
   privileged: true
   depends_on:
     - postgres
-    - signaling-server
+    - mediamtx
   networks:
     - webrtc-network
     - proxy-server
@@ -56,16 +56,20 @@ services:
       - 80:80
     depends_on:
       - web
+      - mediamtx
     networks:
       - proxy-server
+      - webrtc-network
 
-  signaling-server:
-    build:
-      context: ./signalling-server
+  mediamtx:
+    image: bluenviron/mediamtx:latest
     ports:
-      - 8443:8443
+      - 8889:8889  # WHIP/WHEP HTTP port
+      - 8189:8189/udp  # WebRTC UDP
     environment:
-      - WEBRTCSINK_SIGNALLING_SERVER_LOG=info
+      - MTX_WEBRTCADDITIONALHOSTS=192.168.4.25  # Your odroid IP - update this!
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml
     networks:
       - webrtc-network
 

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WHEP Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        h1 { color: #4CAF50; }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        #startBtn { background: #4CAF50; color: white; }
+        #stopBtn { background: #f44336; color: white; }
+        #testBtn { background: #2196F3; color: white; }
+        video {
+            width: 100%;
+            max-width: 800px;
+            background: #000;
+            border: 2px solid #333;
+        }
+        #status {
+            padding: 10px;
+            margin: 10px 0;
+            background: #333;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        #log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            border-radius: 5px;
+        }
+        .info {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>WHEP Streaming Test</h1>
+    
+    <div class="info">
+        <strong>Instructions:</strong><br>
+        1. First, start the GStreamer publisher on the host (see command below)<br>
+        2. Click "Connect WHEP" to start receiving the stream<br>
+        3. Check the log for connection status
+    </div>
+
+    <div class="controls">
+        <button id="testBtn" onclick="testConnection()">Test MediaMTX</button>
+        <button id="startBtn" onclick="startWHEP()">Connect WHEP</button>
+        <button id="stopBtn" onclick="stopWHEP()">Disconnect</button>
+    </div>
+
+    <div id="status">Status: Not connected</div>
+
+    <video id="video" autoplay playsinline muted controls></video>
+
+    <h3>Log</h3>
+    <div id="log"></div>
+
+    <div class="info">
+        <strong>GStreamer publish command (run on host):</strong>
+        <pre>
+# Test pattern (no hardware needed):
+gst-launch-1.0 -v whipsink whip-endpoint=http://localhost:8889/stream/whip name=whip \
+  videotestsrc ! video/x-raw,width=640,height=480 ! videoconvert ! vp8enc deadline=1 ! rtpvp8pay ! queue ! whip. \
+  audiotestsrc ! audioconvert ! opusenc ! rtpopuspay ! queue ! whip.
+
+# Real video capture:
+gst-launch-1.0 -v whipsink whip-endpoint=http://localhost:8889/stream/whip name=whip \
+  v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720 ! videoconvert ! vp8enc deadline=1 ! rtpvp8pay ! queue ! whip. \
+  alsasrc device=hw:1,0 ! audioconvert ! opusenc ! rtpopuspay ! queue ! whip.
+        </pre>
+    </div>
+
+    <script>
+        let pc = null;
+        const logDiv = document.getElementById('log');
+        const statusDiv = document.getElementById('status');
+        const video = document.getElementById('video');
+
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += '[' + time + '] ' + msg + '\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function setStatus(msg) {
+            statusDiv.textContent = 'Status: ' + msg;
+        }
+
+        async function testConnection() {
+            log('Testing MediaMTX connection...');
+            try {
+                const resp = await fetch('/stream/whep', { method: 'OPTIONS' });
+                log('MediaMTX response: ' + resp.status);
+                if (resp.ok || resp.status === 204) {
+                    log('MediaMTX is reachable via nginx proxy');
+                }
+            } catch (e) {
+                log('Error: ' + e.message);
+            }
+        }
+
+        async function startWHEP() {
+            log('Starting WHEP connection...');
+            setStatus('Connecting...');
+
+            try {
+                pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+
+                pc.ontrack = (event) => {
+                    log('Received track: ' + event.track.kind);
+                    if (video.srcObject !== event.streams[0]) {
+                        video.srcObject = event.streams[0];
+                        log('Video source set');
+                    }
+                };
+
+                pc.oniceconnectionstatechange = () => {
+                    log('ICE state: ' + pc.iceConnectionState);
+                    setStatus('ICE: ' + pc.iceConnectionState);
+                };
+
+                pc.onconnectionstatechange = () => {
+                    log('Connection state: ' + pc.connectionState);
+                    if (pc.connectionState === 'connected') {
+                        setStatus('Connected!');
+                    }
+                };
+
+                pc.addTransceiver('video', { direction: 'recvonly' });
+                pc.addTransceiver('audio', { direction: 'recvonly' });
+                log('Added transceivers');
+
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                log('Created offer, waiting for ICE gathering...');
+
+                await new Promise((resolve) => {
+                    if (pc.iceGatheringState === 'complete') {
+                        resolve();
+                    } else {
+                        pc.onicegatheringstatechange = () => {
+                            if (pc.iceGatheringState === 'complete') resolve();
+                        };
+                    }
+                });
+                log('ICE gathering complete');
+
+                log('Sending offer to /stream/whep...');
+                const response = await fetch('/stream/whep', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/sdp' },
+                    body: pc.localDescription.sdp
+                });
+
+                log('WHEP response: ' + response.status);
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    log('WHEP error: ' + err);
+                    setStatus('Error: ' + response.status);
+                    return;
+                }
+
+                const answerSdp = await response.text();
+                log('Received answer SDP');
+                
+                await pc.setRemoteDescription({
+                    type: 'answer',
+                    sdp: answerSdp
+                });
+                log('Remote description set');
+
+            } catch (e) {
+                log('Error: ' + e.message);
+                setStatus('Error');
+                console.error(e);
+            }
+        }
+
+        function stopWHEP() {
+            if (pc) {
+                pc.close();
+                pc = null;
+            }
+            video.srcObject = null;
+            setStatus('Disconnected');
+            log('Disconnected');
+        }
+
+        log('Page loaded. Click "Test MediaMTX" to verify connection.');
+    </script>
+</body>
+</html>

@@ -133,7 +133,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(256))  # Increased from 128 to support modern hashing
     confirmed = db.Column(db.Boolean, default=False)
     name = db.Column(db.String(64))
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)

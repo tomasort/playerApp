@@ -1,21 +1,22 @@
 from .media_pipeline import MediaPipeline
-from gi.repository import Gst, GstWebRTC, GLib
 import gi
+import os
 gi.require_version('Gst', '1.0')
 gi.require_version('GstWebRTC', '1.0')
+from gi.repository import Gst, GstWebRTC, GLib
 
 
 class GstreamerPipeline(MediaPipeline):
-    def __init__(self, v_src=None, a_src=None, webrtc_uri=None, res=(1280, 720), test_src=True):
+    def __init__(self, v_src=None, a_src=None, whip_endpoint=None, res=(1280, 720), test_src=True):
         super().__init__(v_src, a_src, res)
         Gst.init(None)
         self.pipeline = None
         self.loop = None
         self.test_src = test_src
-        self.webrtc_uri = webrtc_uri
-        if self.webrtc_uri is None:
-            # this is the default uri for the signalling server in webrtsink
-            self.webrtc_uri = "ws://localhost:8443"
+        self.whip_endpoint = whip_endpoint
+        if self.whip_endpoint is None:
+            # Get WHIP endpoint from environment or use default
+            self.whip_endpoint = os.getenv('WHIP_ENDPOINT', 'http://localhost:8889/stream/whip')
 
     def start(self):
         if self.status == 1:
@@ -27,17 +28,17 @@ class GstreamerPipeline(MediaPipeline):
             gstreamer_video_src = "videotestsrc"
             gstreamer_audio_src = "audiotestsrc"
         
-        # Build pipeline - always include video, optionally include audio
-        # Use MJPG format for higher resolutions since most cameras support it
-        # and decode to raw video for processing
+        # Build pipeline using whipsink instead of webrtcsink
+        # whipsink uses the WHIP protocol (WebRTC-HTTP Ingestion Protocol)
         pipeline_str = f"""
-        webrtcsink signaller::uri={self.webrtc_uri} name=ws meta="meta,name=gst-stream"
-        {gstreamer_video_src} ! video/x-raw,width={self.resolution[0]},height={self.resolution[1]} ! videoconvert ! queue ! ws.
+        whipsink whip-endpoint={self.whip_endpoint} name=whip
+        {gstreamer_video_src} ! video/x-raw,width={self.resolution[0]},height={self.resolution[1]} ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay ! queue ! whip.
         """
         
         # Add audio pipeline only if audio source is provided and not empty
         if self.a_src is not None and str(self.a_src).strip():
-            pipeline_str += f"{gstreamer_audio_src} ! audio/x-raw ! audioconvert ! audioresample ! queue ! ws."
+            pipeline_str += f"{gstreamer_audio_src} ! audio/x-raw ! audioconvert ! audioresample ! opusenc ! rtpopuspay ! queue ! whip."
+        
         print(pipeline_str)
 
         self.pipeline = Gst.parse_launch(pipeline_str)

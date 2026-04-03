@@ -1,0 +1,55 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install GStreamer and plugins including gst-plugins-rs for whipsink
+RUN apt-get update && apt-get install -y \
+    gstreamer1.0-tools \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav \
+    gstreamer1.0-alsa \
+    gstreamer1.0-pulseaudio \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
+    gstreamer1.0-nice \
+    v4l-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust and cargo for building gst-plugins-rs
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Build and install gst-plugin-webrtchttp (whipsink)
+RUN apt-get update && apt-get install -y \
+    libglib2.0-dev \
+    libnice-dev \
+    libgstreamer-plugins-bad1.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone and build just the webrtchttp plugin
+RUN cargo install cargo-c
+RUN git clone --depth 1 --branch 0.13.0 https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs.git /gst-plugins-rs
+
+WORKDIR /gst-plugins-rs
+RUN cargo cbuild -p gst-plugin-webrtchttp --release
+RUN cp target/aarch64-unknown-linux-gnu/release/libgstwebrtchttp.so /usr/lib/aarch64-linux-gnu/gstreamer-1.0/ || \
+    cp target/release/libgstwebrtchttp.so /usr/lib/aarch64-linux-gnu/gstreamer-1.0/ || \
+    find target -name "libgstwebrtchttp.so" -exec cp {} /usr/lib/aarch64-linux-gnu/gstreamer-1.0/ \;
+
+WORKDIR /app
+
+# Verify whipsink is available
+RUN gst-inspect-1.0 whipsink || echo "whipsink not found, checking plugin location..."
+
+CMD ["bash"]

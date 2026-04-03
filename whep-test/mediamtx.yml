@@ -1,0 +1,22 @@
+###############################################
+# MediaMTX - Minimal config for WHIP/WHEP test
+###############################################
+
+logLevel: info
+
+# WebRTC settings
+webrtc: yes
+webrtcAddress: :8889
+webrtcEncryption: no
+webrtcAllowOrigins: ['*']
+webrtcICEServers2:
+  - url: stun:stun.l.google.com:19302
+
+# Increase buffer sizes for live sources
+readBufferCount: 2048
+
+# Paths - allow publishing to 'stream' path
+paths:
+  stream:
+    source: publisher
+    sourceOnDemand: no

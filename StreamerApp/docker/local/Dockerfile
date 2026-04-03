@@ -2,12 +2,12 @@ FROM python:3.12-alpine
 
 WORKDIR /app
 
-# Enable the 'edge' repository for newer packages (in this case gst-plugins-rs)
+# Enable the 'edge' repository for newer packages
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && apk update
 
-# Install GStreamer and its plugins (including WebRTC and Python bindings)
+# Install GStreamer and its plugins (including WHIP/WHEP support and Python bindings)
 RUN apk add --no-cache \ 
-    postgresql15 \
+    postgresql16 \
     build-base \
     gstreamer \
     gstreamer-tools \
@@ -15,11 +15,12 @@ RUN apk add --no-cache \
     gst-plugins-good \
     gst-plugins-bad \
     gst-plugins-ugly \
-    gst-plugins-rs-rswebrtc \ 
+    gst-plugins-rs-webrtchttp \
     py3-greenlet \
     gobject-introspection-dev \
     libnice \
-    v4l-utils
+    v4l-utils \
+    netcat-openbsd
 
 
 RUN pip install --upgrade pip

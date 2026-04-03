@@ -18,9 +18,9 @@ services:
       - ./StreamerApp:/app/
       - /app/migrations
 
-  signaling-server:
+  mediamtx:
     environment:
-      - WEBRTCSINK_SIGNALLING_SERVER_LOG=debug
+      - MTX_LOGLEVEL=debug
 
   postgres:
     volumes:

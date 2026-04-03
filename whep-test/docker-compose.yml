@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: whep-test-mediamtx
+    ports:
+      - "8889:8889"   # WebRTC/WHIP/WHEP
+      - "8189:8189/udp"  # ICE UDP
+      - "8189:8189/tcp"  # ICE TCP  
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+    networks:
+      - whep-net
+    restart: unless-stopped
+
+  web:
+    image: nginx:alpine
+    container_name: whep-test-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - mediamtx
+    networks:
+      - whep-net
+    restart: unless-stopped
+
+  # GStreamer publisher - streams video to MediaMTX via WHIP
+  publisher:
+    image: playerapp-worker
+    container_name: whep-test-publisher
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for MediaMTX..."
+        sleep 3
+        echo "Starting GStreamer with VIDEO ONLY - H.264 encoding"
+        echo "Video: /dev/video0 (MiraBox Video Capture) - 1280x720 MJPG"
+        gst-launch-1.0 -e \
+          whipsink whip-endpoint=http://mediamtx:8889/stream/whip name=whip \
+          v4l2src device=/dev/video0 do-timestamp=true ! image/jpeg,width=1280,height=720,framerate=30/1 ! jpegdec ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=2500 speed-preset=ultrafast key-int-max=30 ! video/x-h264,profile=constrained-baseline ! rtph264pay pt=96 config-interval=-1 ! queue ! whip.
+    devices:
+      - /dev/video0:/dev/video0
+      - /dev/snd:/dev/snd
+    group_add:
+      - video
+      - audio
+    depends_on:
+      - mediamtx
+    networks:
+      - whep-net
+    restart: unless-stopped
+
+networks:
+  whep-net:
+    driver: bridge
